@@ -1,109 +1,113 @@
-# ![nf-core/testflow](docs/images/nf-core-testflow_logo_light.png#gh-light-mode-only) ![nf-core/testflow](docs/images/nf-core-testflow_logo_dark.png#gh-dark-mode-only)
+# nextflow-workshop-lnu
 
-[![GitHub Actions CI Status](https://github.com/nf-core/testflow/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/testflow/actions?query=workflow%3A%22nf-core+CI%22)
-[![GitHub Actions Linting Status](https://github.com/nf-core/testflow/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/testflow/actions?query=workflow%3A%22nf-core+linting%22)[![AWS CI](https://img.shields.io/badge/CI%20tests-full%20size-FF9900?labelColor=000000&logo=Amazon%20AWS)](https://nf-co.re/testflow/results)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
+A small, runnable [Nextflow](https://www.nextflow.io/) (DSL2) pipeline built on the
+[nf-core](https://nf-co.re/) template and modules, made for a training workshop at
+Linnaeus University. It takes Illumina FASTQ files, checks and trims the reads, aligns them
+to a reference genome, and summarises the quality metrics in a single MultiQC report.
 
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A523.04.0-23aa62.svg)](https://www.nextflow.io/)
-[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
-[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
-[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
-[![Launch on Nextflow Tower](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Nextflow%20Tower-%234256e7)](https://tower.nf/launch?pipeline=https://github.com/nf-core/testflow)
+It is meant to be read, run and modified: every step is a stock nf-core module, so the
+workshop code stays short and shows how the pieces of a real pipeline fit together
+(samplesheet validation → modules → channels → config → reports).
 
-[![Get help on Slack](http://img.shields.io/badge/slack-nf--core%20%23testflow-4A154B?labelColor=000000&logo=slack)](https://nfcore.slack.com/channels/testflow)[![Follow on Twitter](http://img.shields.io/badge/twitter-%40nf__core-1DA1F2?labelColor=000000&logo=twitter)](https://twitter.com/nf_core)[![Follow on Mastodon](https://img.shields.io/badge/mastodon-nf__core-6364ff?labelColor=FFFFFF&logo=mastodon)](https://mstdn.science/@nf_core)[![Watch on YouTube](http://img.shields.io/badge/youtube-nf--core-FF0000?labelColor=000000&logo=youtube)](https://www.youtube.com/c/nf-core)
+## Pipeline overview
 
-## Introduction
+```mermaid
+flowchart LR
+    A[samplesheet.csv] --> B[SAMPLESHEET_CHECK]
+    B --> C[FastQC]
+    B --> D[Trim Galore]
+    D --> E[BBMap align]
+    R[reference FASTA] --> F[BBMap index] --> E
+    C --> M[MultiQC]
+    D --> M
+    V[software versions] --> M
+```
 
-**nf-core/testflow** is a bioinformatics pipeline that ...
+1. Samplesheet validation (`bin/check_samplesheet.py`)
+2. Raw read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
+3. Adapter and quality trimming ([`Trim Galore`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
+4. Reference indexing and read alignment ([`BBMap`](https://sourceforge.net/projects/bbmap/))
+5. Aggregated report ([`MultiQC`](https://multiqc.info/)), including software versions
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+## Requirements
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/contributing/design_guidelines#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+- [Nextflow](https://www.nextflow.io/docs/latest/install.html) `>= 24.04.0` (and Java 17+)
+- One of Docker, Singularity/Apptainer, Podman or Conda/Mamba
 
-1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+> **Nextflow 25.10 and later:** the pipeline still uses the nf-core 2023 template, which relies on
+> the classic script syntax. Newer Nextflow releases default to the strict syntax parser and refuse
+> to load it, so run with `export NXF_SYNTAX_PARSER=v1` until the pipeline is ported.
 
-## Usage
+## Quick start
 
-:::note
-If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how
-to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline)
-with `-profile test` before running the workflow on actual data.
-:::
+Test the setup with the bundled minimal dataset (a SARS-CoV-2 read pair from the
+[nf-core test-datasets](https://github.com/nf-core/test-datasets)):
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+```bash
+nextflow run danilodileo/nextflow-workshop-lnu -profile test,docker --outdir results
+```
 
-First, prepare a samplesheet with your input data that looks as follows:
+Run on your own data:
 
-`samplesheet.csv`:
+```bash
+nextflow run danilodileo/nextflow-workshop-lnu \
+    -profile docker \
+    --input samplesheet.csv \
+    --ref_genome genome.fasta \
+    --outdir results
+```
+
+### Samplesheet
+
+A comma-separated file with a header row and three columns (leave `fastq_2` empty for single-end
+reads):
 
 ```csv
 sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+SAMPLE1,sample1_R1.fastq.gz,sample1_R2.fastq.gz
+SAMPLE2,sample2_R1.fastq.gz,
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Paths can be local files or URLs; files must end in `.fq.gz` or `.fastq.gz`.
 
--->
+### Main parameters
 
-Now, you can run the pipeline using:
+| Parameter        | Description                                                     |
+| ---------------- | --------------------------------------------------------------- |
+| `--input`        | Samplesheet (see above). **Required.**                          |
+| `--ref_genome`   | Reference genome FASTA used by BBMap. **Required.**             |
+| `--outdir`       | Directory where results are published. **Required.**            |
+| `--multiqc_title`| Optional title for the MultiQC report.                          |
 
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+Run `nextflow run danilodileo/nextflow-workshop-lnu --help` for the complete list.
 
-```bash
-nextflow run nf-core/testflow \
-   -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
+Limit the resources a run may request (for a laptop or CI) with a small config passed with `-c`:
+
+```groovy
+process.resourceLimits = [cpus: 4, memory: '16.GB', time: '4.h']
 ```
 
-:::warning
-Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those
-provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_;
-see [docs](https://nf-co.re/usage/configuration#custom-configuration-files).
-:::
+## Output
 
-For more details and further functionality, please refer to the [usage documentation](https://nf-co.re/testflow/usage) and the [parameter documentation](https://nf-co.re/testflow/parameters).
+Results are published under `--outdir`:
 
-## Pipeline output
+| Directory       | Content                                                            |
+| --------------- | ------------------------------------------------------------------ |
+| `fastqc/`       | FastQC reports for the raw reads                                   |
+| `trimgalore/`   | Trimmed reads and trimming reports                                 |
+| `bbmap/`        | Alignments (`*.bam`) and BBMap logs                                |
+| `multiqc/`      | `multiqc_report.html` summarising FastQC and trimming statistics   |
+| `pipeline_info/`| Nextflow execution reports, parameters and `software_versions.yml` |
 
-To see the results of an example test run with a full size dataset refer to the [results](https://nf-co.re/testflow/results) tab on the nf-core website pipeline page.
-For more details about the output files and reports, please refer to the
-[output documentation](https://nf-co.re/testflow/output).
+See [`docs/output.md`](docs/output.md) for details and [`docs/usage.md`](docs/usage.md) for more
+on running the pipeline.
 
 ## Credits
 
-nf-core/testflow was originally written by @danilodileo.
+Written by Danilo Di Leo. Built on the [nf-core](https://nf-co.re/) template and modules
+([Ewels *et al.*, 2020](https://doi.org/10.1038/s41587-020-0439-x)). Tool citations are listed in
+[`CITATIONS.md`](CITATIONS.md).
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+## License
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
-
-## Contributions and Support
-
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
-
-For further information or help, don't hesitate to get in touch on the [Slack `#testflow` channel](https://nfcore.slack.com/channels/testflow) (you can join with [this invite](https://nf-co.re/join/slack)).
-
-## Citations
-
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use  nf-core/testflow for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
-
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
-
-An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
-
-You can cite the `nf-core` publication as follows:
-
-> **The nf-core framework for community-curated bioinformatics pipelines.**
->
-> Philip Ewels, Alexander Peltzer, Sven Fillinger, Harshil Patel, Johannes Alneberg, Andreas Wilm, Maxime Ulysse Garcia, Paolo Di Tommaso & Sven Nahnsen.
->
-> _Nat Biotechnol._ 2020 Feb 13. doi: [10.1038/s41587-020-0439-x](https://dx.doi.org/10.1038/s41587-020-0439-x).
+Released under the MIT License, see [`LICENSE`](LICENSE).

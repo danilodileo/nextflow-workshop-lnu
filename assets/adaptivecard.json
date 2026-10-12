@@ -17,7 +17,7 @@
                         "size": "Large",
                         "weight": "Bolder",
                         "color": "<% if (success) { %>Good<% } else { %>Attention<%} %>",
-                        "text": "nf-core/testflow v${version} - ${runName}",
+                        "text": "nextflow-workshop-lnu v${version} - ${runName}",
                         "wrap": true
                     },
                     {
