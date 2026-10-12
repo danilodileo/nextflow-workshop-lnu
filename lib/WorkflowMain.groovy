@@ -1,5 +1,5 @@
 //
-// This file holds several functions specific to the main.nf workflow in the nf-core/testflow pipeline
+// This file holds several functions specific to the main.nf workflow in the nextflow-workshop-lnu pipeline
 //
 
 import nextflow.Nextflow
@@ -17,7 +17,7 @@ class WorkflowMain {
             "* The nf-core framework\n" +
             "  https://doi.org/10.1038/s41587-020-0439-x\n\n" +
             "* Software dependencies\n" +
-            "  https://github.com/${workflow.manifest.name}/blob/master/CITATIONS.md"
+            "  https://github.com/${workflow.manifest.name}/blob/main/CITATIONS.md"
     }
 
 
@@ -48,16 +48,5 @@ class WorkflowMain {
         if (!params.input) {
             Nextflow.error("Please provide an input samplesheet to the pipeline e.g. '--input samplesheet.csv'")
         }
-    }
-    //
-    // Get attribute from genome config file e.g. fasta
-    //
-    public static Object getGenomeAttribute(params, attribute) {
-        if (params.genomes && params.genome && params.genomes.containsKey(params.genome)) {
-            if (params.genomes[ params.genome ].containsKey(attribute)) {
-                return params.genomes[ params.genome ][ attribute ]
-            }
-        }
-        return null
     }
 }

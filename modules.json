@@ -1,6 +1,6 @@
 {
-    "name": "nf-core/testflow",
-    "homePage": "https://github.com/nf-core/testflow",
+    "name": "nextflow-workshop-lnu",
+    "homePage": "https://github.com/danilodileo/nextflow-workshop-lnu",
     "repos": {
         "https://github.com/nf-core/modules.git": {
             "modules": {

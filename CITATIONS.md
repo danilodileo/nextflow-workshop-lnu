@@ -1,4 +1,4 @@
-# nf-core/testflow: Citations
+# nextflow-workshop-lnu: Citations
 
 ## [nf-core](https://pubmed.ncbi.nlm.nih.gov/32055031/)
 
@@ -13,6 +13,18 @@
 - [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 
   > Andrews, S. (2010). FastQC: A Quality Control Tool for High Throughput Sequence Data [Online].
+
+- [Trim Galore](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/)
+
+  > Krueger F. Trim Galore!: a wrapper around Cutadapt and FastQC to consistently apply quality and adapter trimming to FastQ files.
+
+- [Cutadapt](https://doi.org/10.14806/ej.17.1.200)
+
+  > Martin M. Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet.journal. 2011;17(1):10-12. doi: 10.14806/ej.17.1.200.
+
+- [BBMap](https://sourceforge.net/projects/bbmap/)
+
+  > Bushnell B. BBMap: a fast, accurate, splice-aware aligner. Lawrence Berkeley National Laboratory; 2014.
 
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 

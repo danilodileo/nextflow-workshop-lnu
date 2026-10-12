@@ -88,7 +88,10 @@ workflow TESTFLOW {
     //
     // MODULE: Trim Galore!
     //
-    TRIMGALORE(INPUT_CHECK.out.reads)
+    TRIMGALORE (
+        INPUT_CHECK.out.reads
+    )
+    ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
 
     //
     // MODULE: BBmap index
@@ -99,11 +102,13 @@ workflow TESTFLOW {
         .set { ch_ref_genome }
 
     BBMAP_INDEX( ch_ref_genome )
+    ch_versions = ch_versions.mix(BBMAP_INDEX.out.versions)
 
     //
     // MODULE: BBmap align
     //
     BBMAP_ALIGN( TRIMGALORE.out.reads, BBMAP_INDEX.out.index )
+    ch_versions = ch_versions.mix(BBMAP_ALIGN.out.versions.first())
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -123,6 +128,7 @@ workflow TESTFLOW {
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+    ch_multiqc_files = ch_multiqc_files.mix(TRIMGALORE.out.log.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect(),

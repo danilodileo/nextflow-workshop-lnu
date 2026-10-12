@@ -1,15 +1,14 @@
-name: nf-core CI
-# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+name: CI
+# Runs the pipeline with the minimal test dataset to check that it completes
 on:
   push:
-    branches:
-      - dev
+    branches: [main]
   pull_request:
-  release:
-    types: [published]
 
 env:
   NXF_ANSI_LOG: false
+  # Nextflow 25.10+ defaults to the strict syntax parser, which cannot load this pipeline yet
+  NXF_SYNTAX_PARSER: v1
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
@@ -17,27 +16,29 @@ concurrency:
 
 jobs:
   test:
-    name: Run pipeline with test data
-    # Only run on push if this is the nf-core dev branch (merged PRs)
-    if: "${{ github.event_name != 'push' || (github.event_name == 'push' && github.repository == 'nf-core/testflow') }}"
+    name: Run pipeline with test data (Nextflow ${{ matrix.NXF_VER }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         NXF_VER:
-          - "23.04.0"
-          - "latest-everything"
+          - "24.04.4"
+          - "latest-stable"
     steps:
       - name: Check out pipeline code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v1
+        uses: nf-core/setup-nextflow@v2
         with:
           version: "${{ matrix.NXF_VER }}"
 
       - name: Run pipeline with test data
-        # TODO nf-core: You can customise CI pipeline run tests as required
-        # For example: adding multiple test runs with different parameters
-        # Remember that you can parallelise this by using strategy.matrix
+        run: nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir ./results
+
+      - name: Check outputs
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --outdir ./results
+          test -s results/multiqc/multiqc_report.html
+          test -s results/bbmap/SAMPLE1_T1.bam
+          grep -q trimgalore results/pipeline_info/software_versions.yml
+          grep -q bbmap results/pipeline_info/software_versions.yml
